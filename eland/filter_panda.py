@@ -1,60 +1,98 @@
-def filter_edges(prior_file, panda_file, delimiter="\t"):
-    """
-    Filters edges from the panda network based on the intersection with the prior network,
-    and retains only edges with weights greater than the minimum of the maximum weights
-    per row or column.
+import pandas as pd
+import networkx as nx
+import numpy as np
+import scipy.sparse as sp
 
+def load_networks(prior_file, panda_file, delimiter='\t'):
+    """
+    Loads prior and PANDA networks from files as directed graphs.
+    
     Parameters:
-    prior_file (str): Path to the prior network edgelist file.
-    panda_file (str): Path to the panda network edgelist file.
-    delimiter (str): Delimiter used in the edgelist files.
-
+    prior_file (str): Path to the prior network edge list file.
+    panda_file (str): Path to the PANDA network edge list file.
+    delimiter (str): Delimiter used in the edge list files.
+    
     Returns:
-    pd.DataFrame: DataFrame containing the filtered edgelist.
+    tuple: A tuple containing the prior network graph and the PANDA network graph.
     """
-    # Load prior and panda networks as directed graphs
     prior = nx.read_weighted_edgelist(prior_file, delimiter=delimiter, create_using=nx.DiGraph)
     panda = nx.read_weighted_edgelist(panda_file, delimiter=delimiter, create_using=nx.DiGraph)
+    return prior, panda
 
-    # Get the intersection of edges between prior and panda networks
+def intersect_networks(prior, panda):
+    """
+    Intersects the edges of prior and PANDA networks, creating a new directed graph with common edges.
+    
+    Parameters:
+    prior (networkx.DiGraph): Directed graph for the prior network.
+    panda (networkx.DiGraph): Directed graph for the PANDA network.
+    
+    Returns:
+    scipy.sparse.csr_matrix: The adjacency matrix of the intersected network.
+    list: The list of nodes in the intersected network.
+    """
     common_edges = set(prior.edges()).intersection(panda.edges())
-
-    # Create a new directed graph to store the subset of the panda network
     weighted_prior = nx.DiGraph()
-
-    # Add only the common edges to the panda subset with weights
+    
     for u, v in common_edges:
         if panda.has_edge(u, v):
             weighted_prior.add_edge(u, v, weight=panda[u][v]['weight'])
-
-    # Get the node list to map indices back to node names
+    
     node_list = list(weighted_prior.nodes())
-    node_index_map = {node: i for i, node in enumerate(node_list)}
+    adjacency_matrix = nx.adjacency_matrix(weighted_prior, nodelist=node_list)
+    return adjacency_matrix, node_list
 
-    # Transform the weighted prior to adjacency matrix
-    wt_prior_adj = nx.adjacency_matrix(weighted_prior, nodelist=node_list)
-
-    # Find the maximum value for each row (TF)
-    max_per_tf = wt_prior_adj.max(axis=1).toarray().flatten()
-
-    # Find the maximum value for each column (gene)
-    max_per_gene = wt_prior_adj.max(axis=0).toarray().flatten()
-
-    # Determine the minimum edge selected by above
+def filter_edges_by_max_values(adjacency_matrix):
+    """
+    Filters edges by retaining only those with weights greater than the minimum of the maximum weights per row or column.
+    
+    Parameters:
+    adjacency_matrix (scipy.sparse.csr_matrix): The adjacency matrix of the network.
+    
+    Returns:
+    scipy.sparse.csr_matrix: The filtered adjacency matrix.
+    """
+    max_per_tf = adjacency_matrix.max(axis=1).toarray().flatten()
+    max_per_gene = adjacency_matrix.max(axis=0).toarray().flatten()
     min_edge = min(max_per_gene.min(), max_per_tf.min())
+    selected_edges_mask = adjacency_matrix > min_edge
+    selected_edges = adjacency_matrix.multiply(selected_edges_mask)
+    return selected_edges
 
-    # Select all edges higher than the minimum
-    selected_edges_mask = wt_prior_adj > min_edge
-
-    # Apply the mask to get the selected edges
-    selected_edges = wt_prior_adj.multiply(selected_edges_mask)
-
-    # Convert the sparse matrix back to an edgelist
+def convert_sparse_matrix_to_edgelist(selected_edges, node_list):
+    """
+    Converts a sparse matrix back to an edgelist and creates a DataFrame for better visualization or saving.
+    
+    Parameters:
+    selected_edges (scipy.sparse.csr_matrix): The sparse matrix containing the selected edges.
+    node_list (list): The list of node names corresponding to the indices in the sparse matrix.
+    
+    Returns:
+    pd.DataFrame: A DataFrame representing the edgelist with columns 'source', 'target', and 'weight'.
+    """
     selected_edges_coo = selected_edges.tocoo()
-    edges_list = [(node_list[selected_edges_coo.row[i]], node_list[selected_edges_coo.col[i]], selected_edges_coo.data[i])
-                  for i in range(len(selected_edges_coo.data))]
-
-    # Create a DataFrame for better visualization or saving to file
+    edges_list = [
+        (node_list[selected_edges_coo.row[i]], node_list[selected_edges_coo.col[i]], selected_edges_coo.data[i])
+        for i in range(len(selected_edges_coo.data))
+    ]
     edges_df = pd.DataFrame(edges_list, columns=['source', 'target', 'weight'])
+    return edges_df
 
+def filter_panda(prior_file, panda_file, delimiter='\t'):
+    """
+    Filters the PANDA network by processing prior and PANDA networks, finding their intersection,
+    filtering the edges, and converting the filtered adjacency matrix to an edgelist DataFrame.
+    
+    Parameters:
+    prior_file (str): Path to the prior network edge list file.
+    panda_file (str): Path to the PANDA network edge list file.
+    delimiter (str): Delimiter used in the edge list files.
+    
+    Returns:
+    pd.DataFrame: A DataFrame representing the filtered edgelist with columns 'source', 'target', and 'weight'.
+    """
+    prior, panda = load_networks(prior_file, panda_file, delimiter)
+    adjacency_matrix, node_list = intersect_networks(prior, panda)
+    filtered_edges = filter_edges_by_max_values(adjacency_matrix)
+    edges_df = convert_sparse_matrix_to_edgelist(filtered_edges, node_list)
     return edges_df
