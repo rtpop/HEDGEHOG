@@ -1,0 +1,21 @@
+---
+output:
+  reprex::reprex_document:
+    venue: "gh"
+    advertise: FALSE
+    session_info: TRUE
+    style: TRUE
+    comment: "#;-)"
+    tidyverse_quiet: FALSE
+    std_out_err: TRUE
+knit: reprex::reprex_render
+---
+
+# testing clustering of comunities & pathway scores in brca with hierarchical clustering
+
+```{r}
+library(data.table)
+library(vegan)
+library(pheatmap)
+```
+
