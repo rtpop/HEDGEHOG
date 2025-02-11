@@ -14,8 +14,45 @@ knit: reprex::reprex_render
 # testing clustering of comunities & pathway scores in brca with hierarchical clustering
 
 ```{r}
+rm(list=ls())
 library(data.table)
 library(vegan)
 library(pheatmap)
+library(tidyverse)
+
+setwd("/storage/kuijjerarea/romana/eland")
 ```
 
+```{r load_data}
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+path_scores <- fread("ELAND/results/pt_out_path.csv")
+
+# saving names
+comm_names <- comm_scores[,1]
+path_names <- path_scores[,1]
+
+# convert to matrix
+comm_scores <- as.matrix(comm_scores[,-1])
+path_scores <- as.matrix(path_scores[,-1])
+
+rownames(comm_scores) <- comm_names
+rownames(path_scores) <- path_names
+```
+
+# GO enrichment plots for communities
+
+```{r GO_enrichment_barplot}
+# load results
+classic <- fread("ELAND/GO_classic_results_summary.txt")
+elim <- fread("ELAND/GO_elim_results_summary.txt")
+
+classic <- classic[order(-classic$n_sig_term),]
+classic$comm <- factor(classic$comm, levels = classic$comm)
+classic_plt <- classic[which(classic$n_sig_term > 0),]
+
+p <- ggplot(classic_plt, aes(x=comm, y=n_sig_term)) +
+  geom_bar(stat="identity", fill="#9393d8") +
+  labs(title="Classic GO enrichment", x="GO term", y="-log10(p-value)") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
