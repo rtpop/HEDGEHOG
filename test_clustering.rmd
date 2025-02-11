@@ -19,6 +19,7 @@ library(data.table)
 library(vegan)
 library(pheatmap)
 library(tidyverse)
+library(grid)
 
 setwd("/storage/kuijjerarea/romana/eland")
 ```
@@ -28,15 +29,27 @@ comm_scores <- fread("ELAND/results/pt_out_comm.csv")
 path_scores <- fread("ELAND/results/pt_out_path.csv")
 
 # saving names
-comm_names <- comm_scores[,1]
-path_names <- path_scores[,1]
+comm_names <- comm_scores$V1
+path_names <- path_scores$V1
 
 # convert to matrix
 comm_scores <- as.matrix(comm_scores[,-1])
 path_scores <- as.matrix(path_scores[,-1])
 
-rownames(comm_scores) <- comm_names
-rownames(path_scores) <- path_names
+rownames(comm_scores) <- NULL
+rownames(path_scores) <- NULL
+colnames(comm_scores) <- NULL
+colnames(path_scores) <- NULL
+
+comm <- pheatmap(comm_scores, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL)
+
+# Add titles to the x and y axes
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+
+pway <- pheatmap(path_scores, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
 ```
 
 # GO enrichment plots for communities
@@ -46,13 +59,31 @@ rownames(path_scores) <- path_names
 classic <- fread("ELAND/GO_classic_results_summary.txt")
 elim <- fread("ELAND/GO_elim_results_summary.txt")
 
+# load the filtered communities
+fil_comm <- fread("ELAND/results/pvg.nodes")
+fil_comm <- fil_comm[which(fil_comm$V2 <= 200 & fil_comm$V2 >= 10),]
+
 classic <- classic[order(-classic$n_sig_term),]
 classic$comm <- factor(classic$comm, levels = classic$comm)
+
+# filter only communities with pathways between 10-200 genes
 classic_plt <- classic[which(classic$n_sig_term > 0),]
+classic_plt <- classic_plt[which(classic_plt$comm %in% fil_comm$V1),]
 
 p <- ggplot(classic_plt, aes(x=comm, y=n_sig_term)) +
   geom_bar(stat="identity", fill="#9393d8") +
-  labs(title="Classic GO enrichment", x="GO term", y="-log10(p-value)") +
+  labs(title="Classic GO enrichment", x="community", y="Number of enriched terms") +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
+```{r size_of_enriched_communities}
+classic_plt$comm_size <- fil_comm$V2[match(classic_plt$comm, fil_comm$V1)]
+
+q <- ggplot(classic_plt, aes(x=comm, y=comm_size)) +
+  geom_bar(stat = "identity", fill="#9393d8") +
+  labs(title="Classic GO enrichment", x="community", y="community size") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
