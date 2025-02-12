@@ -20,6 +20,7 @@ library(vegan)
 library(pheatmap)
 library(tidyverse)
 library(grid)
+library(stats)
 
 setwd("/storage/kuijjerarea/romana/eland")
 ```
@@ -50,6 +51,82 @@ grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90,
 pway <- pheatmap(path_scores, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL)
 grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+```
+
+```{r binary heatmaps}
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+path_scores <- fread("ELAND/results/pt_out_path.csv")
+
+# saving names
+comm_names <- comm_scores$V1
+path_names <- path_scores$V1
+
+# convert to matrix
+comm_scores <- as.matrix(comm_scores[,-1])
+path_scores <- as.matrix(path_scores[,-1])
+
+rownames(comm_scores) <- NULL
+rownames(path_scores) <- NULL
+colnames(comm_scores) <- NULL
+colnames(path_scores) <- NULL
+
+# binarise matrices
+comm_scores_bin <- ifelse(comm_scores > 0, 1, 0)
+path_scores_bin <- ifelse(path_scores > 0, 1, 0)
+
+bw_palette <- colorRampPalette(c("white", "black"))(2)
+
+#plot heatmaps
+comm_bin <- pheatmap(comm_scores_bin, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+
+pway_bin <- pheatmap(path_scores_bin, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+```
+
+```{r hclust}
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+path_scores <- fread("ELAND/results/pt_out_path.csv")
+
+# read distance matrices
+comm_dist <- fread("ELAND/results/dist_matrix_comm.csv")
+path_dist <- fread("ELAND/results/dist_matrix_path.csv")
+colnames(comm_dist) <- colnames(comm_scores)[-1]
+colnames(path_dist) <- colnames(path_scores)[-1]
+rownames(comm_dist) <- colnames(comm_scores)[-1]
+rownames(path_dist) <- colnames(path_scores)[-1]
+comm_dist <- as.matrix(comm_dist)
+path_dist <- as.matrix(path_dist)
+
+# remove NAs from distance matrices
+# Function to remove rows and columns with NAs
+remove_na_rows_cols <- function(matrix) {
+  # Remove rows and columns that contain NA values
+  valid_rows <- apply(matrix, 1, function(row) !any(is.na(row)))
+  valid_cols <- apply(matrix, 2, function(col) !any(is.na(col)))
+  cleaned_matrix <- matrix[valid_rows, valid_cols, drop = FALSE]
+  return(cleaned_matrix)
+}
+
+comm_dist <- remove_na_rows_cols(comm_dist)
+path_dist <- remove_na_rows_cols(path_dist)
+
+# saving names
+comm_names <- comm_scores$V1
+path_names <- path_scores$V1
+
+# convert to matrix
+comm_scores <- comm_scores[,-1]
+path_scores <- path_scores[,-1]
+
+comm_scaled <- scale(comm_scores)
+path_scaled <- scale(path_scores)
+
+comm_hclust <- hclust(comm_dist)
+path_hclust <- hclust(path_dist)
+
 ```
 
 # GO enrichment plots for communities
@@ -87,3 +164,91 @@ q <- ggplot(classic_plt, aes(x=comm, y=comm_size)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
+```{r sambar_netzooR}
+#note that this needs to be run in the R4.4 module cos cannot be installed in 4.2
+# 4.4 makes more sense anyway since new project
+library(netZooR)
+
+# load mut data
+mut <- fread("ELAND/data/BRCAmutMatrixFinal.csv")
+samples <- mut$V1
+mut <- mut[,-1]
+mut <- as.matrix(mut)
+rownames(mut) <- samples
+
+# load esize
+esize <- unlist(c(fread("ELAND/data/esizef.csv")))[-1]
+
+# load genes
+genes <- unlist(c(fread("ELAND/data/genes.txt")))
+
+#run sambar
+sambar_res <- sambar(mutdata = mut, esize = esize, cangenes = genes, signatureset = "ELAND/results/fil_comm.gmt")
+```
+```{r getting pathway scores}
+# have to do it myself to get pathway scores cos the main function doesn't output them
+# just copying form the samber code
+# convert gmt
+edg <- netZooR:::sambarConvertgmt("ELAND/results/fil_comm.gmt", cagenes = genes)
+
+# correct number of mutations for gene length (returns gene mutation scores)
+mutlength <- netZooR:::sambarCorgenelength(x=mut, cagenes = genes, exonsize = esize)
+  
+# transform mutlength
+mutlength <- t(mutlength)
+  
+# correct for patient-specific mutation rate
+# calculate mutation rate
+patmutrate <- apply(mutlength, 2, sum)
+patmut0 <- which(patmutrate==0)
+# remove patients with mutationrate==0
+if(length(patmut0)>0){
+  mutlength <- mutlength[,-patmut0,drop=FALSE]
+  patmutrate <- patmutrate[-patmut0]
+}
+  
+# correct for mutation rate		
+mutrate <- mutlength
+for (p in seq_len(ncol(mutlength))){
+  mutrate[,p] <- mutlength[,p]/patmutrate[p]
+}
+
+# correct gene scores for the number of pathways each gene belongs to
+mutrate <- mutrate[which(row.names(mutrate) %in% colnames(edg)),]
+genefreq <- apply(edg,2,sum)
+genefreq <- genefreq[which(names(genefreq) %in% row.names(mutrate))]
+mutratecor <- mutrate/genefreq
+  
+# summarize gene mutation scores into pathway mutation scores
+signpat <- netZooR:::sambarDesparsify(edgx = edg, mutratecorx = mutratecor)
+
+save(signpat, file = "ELAND/results/sambar_comm_scores.RData")
+```
+
+```{r compare sambar r & python}
+py <- fread("ELAND/results/pt_out_comm.csv")
+load("ELAND/results/sambar_comm_scores.RData")
+
+# convert to matrix
+comms <- py$V1
+py <- py[,-1]
+py <- as.matrix(py)
+rownames(py) <- comms
+
+# order both matrices the same
+sorted_row_names <- sort(rownames(py))
+sorted_col_names <- sort(colnames(py))
+
+py <- py[sorted_row_names, sorted_col_names]
+signpat <- signpat[sorted_row_names, sorted_col_names]
+py <- round(py, 10)
+signpat <- round(signpat, 10)
+
+iden <- identical(py, signpat)
+
+if(!iden) {
+  differences <- which(py != signpat, arr.ind = TRUE)
+} else {
+  print("The two matrices are identical")
+}
+```
