@@ -21,6 +21,7 @@ library(pheatmap)
 library(tidyverse)
 library(grid)
 library(stats)
+library(stylo) # for cosine distance
 
 setwd("/storage/kuijjerarea/romana/eland")
 ```
@@ -179,6 +180,45 @@ pway_heat <- pheatmap(path_scores_bin, cluster_rows = TRUE, cluster_cols = path_
 grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
 ggsave(pway_heat, file="ELAND/results/path_heatmap_hclust_binomial_binary.pdf")
+
+```
+
+```{r hclust_cosine}
+# read data
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+path_scores <- fread("ELAND/results/pt_out_path.csv")
+
+# saving names
+comm_names <- comm_scores$V1
+path_names <- path_scores$V1
+
+# calculate cosine distance
+comm_dist <- dist.cosine(t(as.matrix(comm_scores[,-1])))
+path_dist <- dist.cosine(t(as.matrix(path_scores[,-1])))
+
+# hierarchical clustering
+comm_hclust <- hclust(comm_dist)
+path_hclust <- hclust(path_dist)
+
+# binarise matrices
+comm_scores_bin <- ifelse(comm_scores > 0, 1, 0)
+path_scores_bin <- ifelse(path_scores > 0, 1, 0)
+rownames(comm_scores_bin) <- NULL
+rownames(path_scores_bin) <- NULL
+colnames(comm_scores_bin) <- NULL
+colnames(path_scores_bin) <- NULL
+bw_palette <- colorRampPalette(c("white", "black"))(2)
+
+# plot heatmaps
+comm_heat <- pheatmap(comm_scores_bin, cluster_rows = TRUE, cluster_cols = comm_hclust, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(comm_heat, file="ELAND/results/comm_heatmap_hclust_cosine_binary.pdf") 
+
+pway_heat <- pheatmap(path_scores_bin, cluster_rows = TRUE, cluster_cols = path_hclust, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(pway_heat, file="ELAND/results/path_heatmap_hclust_cosine_binary.pdf")
 
 ```
 
