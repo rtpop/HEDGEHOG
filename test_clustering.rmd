@@ -86,6 +86,42 @@ grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fon
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
 ```
 
+```{r heat_log_scores}
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+path_scores <- fread("ELAND/results/pt_out_path.csv")
+
+# saving names
+comm_names <- comm_scores$V1
+path_names <- path_scores$V1
+
+# convert to matrix
+comm_scores <- as.matrix(comm_scores[,-1])
+path_scores <- as.matrix(path_scores[,-1])
+
+rownames(comm_scores) <- NULL
+rownames(path_scores) <- NULL
+colnames(comm_scores) <- NULL
+colnames(path_scores) <- NULL
+
+#log transform scores
+comm_scores_log <- log10(comm_scores + 1)
+path_scores_log <- log10(path_scores + 1)
+
+bw_palette <- colorRampPalette(c("white", "black"))(10)
+
+#plot heatmaps
+comm_bin <- pheatmap(comm_scores_log, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(comm_bin, file="ELAND/results/comm_heatmap_log.pdf")
+
+pway_bin <- pheatmap(path_scores_log, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(pway_bin, file="ELAND/results/path_heatmap_log.pdf")
+```
+
+
 ```{r hclust}
 comm_scores <- fread("ELAND/results/pt_out_comm.csv")
 path_scores <- fread("ELAND/results/pt_out_path.csv")
