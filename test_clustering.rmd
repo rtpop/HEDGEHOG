@@ -110,22 +110,35 @@ remove_na_rows_cols <- function(matrix) {
   return(cleaned_matrix)
 }
 
-comm_dist <- remove_na_rows_cols(comm_dist)
-path_dist <- remove_na_rows_cols(path_dist)
+comm_dist <- as.dist(remove_na_rows_cols(comm_dist))
+path_dist <- as.dist(remove_na_rows_cols(path_dist))
 
 # saving names
 comm_names <- comm_scores$V1
 path_names <- path_scores$V1
 
 # convert to matrix
-comm_scores <- comm_scores[,-1]
-path_scores <- path_scores[,-1]
-
-comm_scaled <- scale(comm_scores)
-path_scaled <- scale(path_scores)
+comm_scores <- as.matrix(comm_scores[,-1])
+path_scores <- as.matrix(path_scores[,-1])
+rownames(comm_scores) <- NULL
+rownames(path_scores) <- NULL
+colnames(comm_scores) <- NULL
+colnames(path_scores) <- NULL
 
 comm_hclust <- hclust(comm_dist)
 path_hclust <- hclust(path_dist)
+
+bw_palette <- colorRampPalette(c("white", "black"))(50)
+
+comm_heat <- pheatmap(comm_scores, cluster_rows = TRUE, cluster_cols = comm_hclust, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(comm_heat, file="ELAND/results/comm_heatmap_hclust.pdf")
+
+pway_heat <- pheatmap(path_scores, cluster_rows = FALSE, cluster_cols = path_hclust, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(pway_heat, file="ELAND/results/path_heatmap_hclust.pdf")
 
 ```
 
