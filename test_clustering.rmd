@@ -25,7 +25,7 @@ library(stats)
 setwd("/storage/kuijjerarea/romana/eland")
 ```
 
-```{r load_data}
+```{r comm_score_heatmap}
 comm_scores <- fread("ELAND/results/pt_out_comm.csv")
 path_scores <- fread("ELAND/results/pt_out_path.csv")
 
