@@ -38,7 +38,7 @@ length(unique(allgenes)) # 756
 
 # i should used our gtex annotation as that is what these networks are based on
 anno <- read.delim("data/GTEx_gene_names.txt") #  from gtex code review NEW2 folder
-annosub <- anno[which(row.names(anno) %in% allgenes),]
+annosub <- anno[which(anno[,1] %in% allgenes),]
 allgenes <- substr(allgenes,1,15)
 table(nchar(allgenes)) # 16 or 17 characters
 table(nchar(row.names(anno))) # all 15 characters
@@ -82,19 +82,19 @@ table(nchar(row.names(anno))) # all 15 characters
 ### GO term enrichment of breast network (only 756 genes total, will compare all with entire gtex gene background)
 
 	# 1. GO term enrichment with classical test
-		background <- anno[,1]
+		background <- annosub[,1]
 		GO2Symbol.bp <- annFUN.org("BP", mapping = "org.Hs.eg.db", ID = "symbol") # Human genes, attach GO to it
 		symbol2GO.bp <- inverseList(GO2Symbol.bp)
-		dir.create("GOresults_classic")
+		dir.create("results/GOresults_classic_fil_bg")
 		res <- matrix(NA, nrow(sign), 5)
 		colnames(res) <- c("community","sign", "minadp", "topGOID", "topTerm")
 		res[,1] <- as.character(sign[,1])
-		for(i in 1:nrow(sign)){
+		for(i in 2:nrow(sign)){
 			genesincom <- sign[i,3]
 			genesincom <- unlist(c(strsplit(as.character(genesincom), " ")))
 			#genesincom <- substr(genesincom, 5, nchar(genesincom))
 			genesincom <- unique(substr(genesincom, 1, 15))
-			interesting <- as.character(anno[which(anno[,1] %in% genesincom),1])
+			interesting <- as.character(annosub[which(annosub[,1] %in% genesincom),1])
 
 			if(length(interesting) == 0){
 				next
@@ -110,7 +110,7 @@ table(nchar(row.names(anno))) # all 15 characters
 		    adjP_Fisher <- p.adjust(enrichRes.bp$classic,"BH")
 		    enrichRes.bp <- cbind(enrichRes.bp, adjP_Fisher)
 		    enrichRes.bp <- enrichRes.bp[order(enrichRes.bp$adjP_Fisher),]
-		    write.table(enrichRes.bp,file=paste("GOresults_classic/", as.character(sign[i,1]), ".txt", sep="") ,row.names = F,col.names = T, quote = F,sep="\t")
+		    write.table(enrichRes.bp,file=paste("results/GOresults_classic_fil_bg/", as.character(sign[i,1]), ".txt", sep="") ,row.names = F,col.names = T, quote = F,sep="\t")
 
 		   	res[i,2] <- length(which(enrichRes.bp$adjP_Fisher<0.05))
 		   	res[i,3] <- min(enrichRes.bp$adjP_Fisher)
@@ -125,7 +125,7 @@ table(nchar(row.names(anno))) # all 15 characters
 
 
 	# 2. with elim test (likely most interesting as it finds the best fitting pathways)
-		dir.create("GOresults_elim")
+		dir.create("results/GOresults_elim_fil_bg")
 		res <- matrix(NA, nrow(sign), 5)
 		colnames(res) <- c("community","sign", "minadp", "topGOID", "topTerm")
 		res[,1] <- as.character(sign[,1])
