@@ -21,6 +21,7 @@ library(pheatmap)
 library(tidyverse)
 library(grid)
 library(stats)
+library(pcaMethods)
 #library(stylo) # for cosine distance
 
 setwd("/storage/kuijjerarea/romana/eland")
@@ -431,4 +432,24 @@ comm_bin <- pheatmap(comm_scores_bin, cluster_rows = FALSE, cluster_cols = clust
 grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
 ggsave(comm_bin, file="ELAND/results/path_heatmap_binary_ucec.pdf")
+```
+```{r pca_comm_scores}
+# load scores
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+
+# sample names
+samples <- comm_scores$V1
+
+# run pca
+pca_brca <- pcaMethods::pca(t(as.matrix(comm_scores[,-1])), method = "svd", center = TRUE)
+
+# plot pca scores
+scores <- pca_brca@scores
+p <- ggplot(scores, aes(x=PC1, y=PC2)) +
+  geom_point() +
+  labs(title="PCA of community scores", x="PC1", y="PC2") +
+  theme_classic()
+
+ggsave(p, file="ELAND/results/pca_comm_scores_brca.pdf")
+
 ```
