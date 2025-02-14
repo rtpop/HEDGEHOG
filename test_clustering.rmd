@@ -453,3 +453,27 @@ p <- ggplot(scores, aes(x=PC1, y=PC2)) +
 ggsave(p, file="ELAND/results/pca_comm_scores_brca.pdf")
 
 ```
+
+```{r sparse_svd_with_irlba}
+# doesn't really work, but I'll leave it here for now
+library(irlba)
+library(cluster)
+
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+
+# sample names
+samples <- comm_scores$V1
+
+# convert to matrix
+comm_scores <- as.matrix(comm_scores[,-1])
+
+# run sparse svd
+sparse_svd <- irlba(comm_scores, nu = 0, nv=10)
+
+# reduce so you can then cluster
+comm_scores_reduced <- as.matrix(comm_scores %*% sparse_svd$v)
+
+# cluster
+clust_kmeans <- kmeans(comm_scores, 10)
+summary(silhouette(clust_kmeans$cluster, dist(comm_scores_reduced)))
+```
