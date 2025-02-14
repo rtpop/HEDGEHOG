@@ -21,7 +21,7 @@ library(pheatmap)
 library(tidyverse)
 library(grid)
 library(stats)
-library(stylo) # for cosine distance
+#library(stylo) # for cosine distance
 
 setwd("/storage/kuijjerarea/romana/eland")
 ```
@@ -105,8 +105,8 @@ colnames(comm_scores) <- NULL
 colnames(path_scores) <- NULL
 
 #log transform scores
-comm_scores_log <- log10(comm_scores + 1)
-path_scores_log <- log10(path_scores + 1)
+comm_scores_log <- log2(comm_scores + 1)
+path_scores_log <- log2(path_scores + 1)
 
 bw_palette <- colorRampPalette(c("white", "black"))(10)
 
@@ -114,12 +114,12 @@ bw_palette <- colorRampPalette(c("white", "black"))(10)
 comm_bin <- pheatmap(comm_scores_log, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL, color = bw_palette)
 grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
-ggsave(comm_bin, file="ELAND/results/comm_heatmap_log.pdf")
+ggsave(comm_bin, file="ELAND/results/comm_heatmap_log2.pdf")
 
 pway_bin <- pheatmap(path_scores_log, cluster_rows = TRUE, cluster_cols = TRUE, labels_row = NULL, labels_col = NULL, color = bw_palette)
 grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
-ggsave(pway_bin, file="ELAND/results/path_heatmap_log.pdf")
+ggsave(pway_bin, file="ELAND/results/path_heatmap_log2.pdf")
 ```
 
 
@@ -344,4 +344,91 @@ if(!iden) {
 } else {
   print("The two matrices are identical")
 }
+```
+
+```{r sambar_ucec}
+library(netZooR)
+# load mut data
+load("/storage/kuijjerarea/tatiana/mutation_data/mut.ucec.RData")
+
+mut <- as.matrix(mut.ucec)
+
+# load esize
+esize <- unlist(c(fread("ELAND/data/esizef.csv")))[-1]
+
+# load genes
+genes <- unlist(c(fread("ELAND/data/genes.txt")))
+
+#run sambar
+#sambar_res <- sambar(mutdata = mut, esize = esize, cangenes = genes, signatureset = "ELAND/data/c2.cp.v2024.1.Hs.symbols.gmt")
+
+# convert gmt
+edg <- netZooR:::sambarConvertgmt("ELAND/data/c2.cp.v2024.1.Hs.symbols.gmt", cagenes = genes)
+
+# correct number of mutations for gene length (returns gene mutation scores)
+mutlength <- netZooR:::sambarCorgenelength(x=mut, cagenes = genes, exonsize = esize)
+  
+# transform mutlength
+mutlength <- t(mutlength)
+  
+# correct for patient-specific mutation rate
+# calculate mutation rate
+patmutrate <- apply(mutlength, 2, sum)
+patmut0 <- which(patmutrate==0)
+# remove patients with mutationrate==0
+if(length(patmut0)>0){
+  mutlength <- mutlength[,-patmut0,drop=FALSE]
+  patmutrate <- patmutrate[-patmut0]
+}
+  
+# correct for mutation rate		
+mutrate <- mutlength
+for (p in seq_len(ncol(mutlength))){
+  mutrate[,p] <- mutlength[,p]/patmutrate[p]
+}
+
+# correct gene scores for the number of pathways each gene belongs to
+mutrate <- mutrate[which(row.names(mutrate) %in% colnames(edg)),]
+genefreq <- apply(edg,2,sum)
+genefreq <- genefreq[which(names(genefreq) %in% row.names(mutrate))]
+mutratecor <- mutrate/genefreq
+  
+# summarize gene mutation scores into pathway mutation scores
+signpat <- netZooR:::sambarDesparsify(edgx = edg, mutratecorx = mutratecor)
+
+save(signpat, file = "ELAND/results/sambar_path_scores_ucec.RData")
+```
+
+```{r plot_heatmap_ucec}
+load("ELAND/results/sambar_path_scores_ucec.RData")
+
+comm_scores <- signpat
+
+rownames(comm_scores) <- NULL
+colnames(comm_scores) <- NULL
+
+#log transform scores
+comm_scores_log <- log10(comm_scores + 1)
+
+# binarise
+comm_scores_bin <- ifelse(comm_scores > 0, 1, 0)
+
+# calculate binomial distance between samples
+  distance <- vegan::vegdist(t(signpat), method="binomial")
+  
+  # cluster tree
+  cluster <- stats::hclust(distance, method="complete") # hclust from "stats"
+
+  # order decreasing
+  cluster <- as.dendrogram(cluster)
+  cluster <- dendextend::rotate(cluster, order_Rt = TRUE, decreasing = FALSE)
+  cluster <- as.hclust(cluster)
+
+bw_palette <- colorRampPalette(c("white", "black"))(10)
+
+#plot heatmaps
+comm_bin <- pheatmap(comm_scores_bin, cluster_rows = FALSE, cluster_cols = cluster, labels_row = NULL, labels_col = NULL, color = bw_palette)
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+ggsave(comm_bin, file="ELAND/results/path_heatmap_binary_ucec.pdf")
 ```
