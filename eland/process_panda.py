@@ -1,7 +1,7 @@
 # import libraries
 import pandas as pd
 
-def process_edge_list(input_file, output_file):
+def process_edge_list(input_file, output_file, delim = '\t'):
     """
     Processes an edge list file as output by netZooPy PANDA by removing the third column
     (the prior edge) and saves the result to a new file in a tab-delimited format suitable
@@ -15,7 +15,7 @@ def process_edge_list(input_file, output_file):
     None
     """
     # Read the file into a pandas DataFrame
-    df = pd.read_csv(input_file, delim_whitespace=True, header=None)
+    df = pd.read_csv(input_file, delim=delim, header=None)
     
     # Ensure there are sufficient columns in the DataFrame
     if df.shape[1] < 4:
