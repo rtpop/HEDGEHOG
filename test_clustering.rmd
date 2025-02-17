@@ -477,3 +477,18 @@ comm_scores_reduced <- as.matrix(comm_scores %*% sparse_svd$v)
 clust_kmeans <- kmeans(comm_scores, 10)
 summary(silhouette(clust_kmeans$cluster, dist(comm_scores_reduced)))
 ```
+
+```{r affinity_propagation_clustering}
+library(apcluster)
+comm_scores <- fread("ELAND/results/pt_out_comm.csv")
+
+# sample names
+samples <- comm_scores$V1
+
+# convert to matrix
+comm_scores <- as.matrix(comm_scores[,-1])
+
+sim <- crossprod(M1)
+sim <- sim / sqrt(sim)
+clust_ap <- apcluster(sim) #Takes a while
+```
