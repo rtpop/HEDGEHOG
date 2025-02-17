@@ -118,7 +118,7 @@ table(nchar(row.names(anno))) # all 15 characters
 		   	res[i,5] <- enrichRes.bp[1,2]
 
 				print(res[i,])
-		write.table(res, "GOresults_summary.txt", sep="\t", quote=F)
+		write.table(res, "/results/GOresults_classic_fil_bg/GOresults_summary.txt", sep="\t", quote=F)
 			}
 		#write.table(res, "GOresults_summary.txt", sep="\t", quote=F)
 			}
@@ -148,7 +148,7 @@ table(nchar(row.names(anno))) # all 15 characters
 		    adjP_Fisher <- p.adjust(enrichRes.bp$elim,"BH")
 		    enrichRes.bp <- cbind(enrichRes.bp, adjP_Fisher)
 		    enrichRes.bp <- enrichRes.bp[order(enrichRes.bp$adjP_Fisher),]
-		    write.table(enrichRes.bp,file=paste("GOresults_elim/", as.character(sign[i,1]), ".txt", sep="") ,row.names = F,col.names = T, quote = F,sep="\t")
+		    write.table(enrichRes.bp,file=paste("results/GOresults_elim_fil_bg/", as.character(sign[i,1]), ".txt", sep="") ,row.names = F,col.names = T, quote = F,sep="\t")
 
 		   	res[i,2] <- length(which(enrichRes.bp$adjP_Fisher<0.05))
 		   	res[i,3] <- min(enrichRes.bp$adjP_Fisher)
@@ -156,7 +156,7 @@ table(nchar(row.names(anno))) # all 15 characters
 		   	res[i,5] <- enrichRes.bp[1,2]
 
 				print(res[i,])
-				write.table(res, "GOresults_summary_elim.txt", sep="\t", quote=F)
+				write.table(res, "results/GOresults_elim_fil_bg/GOresults_summary_elim.txt", sep="\t", quote=F)
 			}
 		}
 
