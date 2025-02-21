@@ -3,13 +3,14 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["eland"]
+packages = ["eland", "bihidef"]
 
 [project]
 name = "netzoopy-eland"
 version = "0.1.0"
 authors = [
     {name = "Romana Pop", email = "romanatp@uio.no"},
+    {name = "Genis Calderer", email = "genis.calderer@gmail.com"}
 ]
 
 description = "A package to desparsify somatic mutation data based on bi-partite GRN communities."
@@ -22,10 +23,15 @@ classifiers = [
 ]
 
 dependencies = [
+    "copy",
+    "hidef",
+    "multiprocessing",
     "networkx",
+    "netZooPy",
     "numpy",
     "pandas",
-    "scikit-learn",
+    "python-igraph",
+    "scipy",
 ]
 
 [project.urls]
