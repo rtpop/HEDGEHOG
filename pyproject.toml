@@ -22,13 +22,10 @@ classifiers = [
 ]
 
 dependencies = [
-    "bioframe",
+    "networkx",
     "numpy",
     "pandas",
-    "pybbi",
-    "pyjaspar",
     "scikit-learn",
-    "tqdm",
 ]
 
 [project.urls]
