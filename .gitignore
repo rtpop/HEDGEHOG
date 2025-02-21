@@ -2,3 +2,5 @@ data/
 results/
 .pybiomart.sqlite
 __pycache__/
+build/
+*.egg-info/
