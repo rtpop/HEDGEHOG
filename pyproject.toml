@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["eland"]
+
+[project]
+name = "netzoopy-eland"
+version = "0.1.0"
+authors = [
+    {name = "Romana Pop", email = "romanatp@uio.no"},
+]
+
+description = "A package to desparsify somatic mutation data based on bi-partite GRN communities."
+readme = "README.md"
+license = {text = "GPL-3"}
+keywords = ["somatic-mutations", "gene-regulatory-network", "community-detection"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+dependencies = [
+    "bioframe",
+    "numpy",
+    "pandas",
+    "pybbi",
+    "pyjaspar",
+    "scikit-learn",
+    "tqdm",
+]
+
+[project.urls]
+Repository = "https://github.com/rtpop/ELAND"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks integration tests",
+    "network: marks tests that require internet connection",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
