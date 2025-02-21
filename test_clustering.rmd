@@ -400,8 +400,61 @@ signpat <- netZooR:::sambarDesparsify(edgx = edg, mutratecorx = mutratecor)
 save(signpat, file = "ELAND/results/sambar_path_scores_ucec.RData")
 ```
 
+```{r sambar_ucec_comm}
+library(netZooR)
+# load mut data
+load("/storage/kuijjerarea/tatiana/mutation_data/mut.ucec.RData")
+
+mut <- as.matrix(mut.ucec)
+
+# load esize
+esize <- unlist(c(fread("ELAND/data/esizef.csv")))[-1]
+
+# load genes
+genes <- unlist(c(fread("ELAND/data/genes.txt")))
+
+#run sambar
+#sambar_res <- sambar(mutdata = mut, esize = esize, cangenes = genes, signatureset = "ELAND/data/c2.cp.v2024.1.Hs.symbols.gmt")
+
+# convert gmt
+edg <- netZooR:::sambarConvertgmt("ELAND/results/fil_comm.gmt", cagenes = genes)
+
+# correct number of mutations for gene length (returns gene mutation scores)
+mutlength <- netZooR:::sambarCorgenelength(x=mut, cagenes = genes, exonsize = esize)
+  
+# transform mutlength
+mutlength <- t(mutlength)
+  
+# correct for patient-specific mutation rate
+# calculate mutation rate
+patmutrate <- apply(mutlength, 2, sum)
+patmut0 <- which(patmutrate==0)
+# remove patients with mutationrate==0
+if(length(patmut0)>0){
+  mutlength <- mutlength[,-patmut0,drop=FALSE]
+  patmutrate <- patmutrate[-patmut0]
+}
+  
+# correct for mutation rate		
+mutrate <- mutlength
+for (p in seq_len(ncol(mutlength))){
+  mutrate[,p] <- mutlength[,p]/patmutrate[p]
+}
+
+# correct gene scores for the number of pathways each gene belongs to
+mutrate <- mutrate[which(row.names(mutrate) %in% colnames(edg)),]
+genefreq <- apply(edg,2,sum)
+genefreq <- genefreq[which(names(genefreq) %in% row.names(mutrate))]
+mutratecor <- mutrate/genefreq
+  
+# summarize gene mutation scores into pathway mutation scores
+signpat <- netZooR:::sambarDesparsify(edgx = edg, mutratecorx = mutratecor)
+
+save(signpat, file = "ELAND/results/sambar_comm_scores_ucec_w_breast_comm.RData")
+```
+
 ```{r plot_heatmap_ucec}
-load("ELAND/results/sambar_path_scores_ucec.RData")
+load("ELAND/results/sambar_comm_scores_ucec_w_breast_comm.RData")
 
 comm_scores <- signpat
 
@@ -428,11 +481,45 @@ comm_scores_bin <- ifelse(comm_scores > 0, 1, 0)
 bw_palette <- colorRampPalette(c("white", "black"))(10)
 
 #plot heatmaps
-comm_bin <- pheatmap(comm_scores_bin, cluster_rows = FALSE, cluster_cols = cluster, labels_row = NULL, labels_col = NULL, color = bw_palette)
+comm_bin <- pheatmap(comm_scores_log, cluster_rows = FALSE, cluster_cols = cluster, labels_row = NULL, labels_col = NULL, color = bw_palette)
 grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
 grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
-ggsave(comm_bin, file="ELAND/results/path_heatmap_binary_ucec.pdf")
+ggsave(comm_bin, file="ELAND/results/comm_heatmap_log10_ucec_w_breast_comm.pdf")
 ```
+
+```{r}
+library(pheatmap)
+library(grid)
+
+# Assuming comm_scores_log is your data matrix
+# Define a black-to-white color palette
+bw_palette <- colorRampPalette(c("white", "black"))(400)
+
+# Set the scale cap and breaks
+scale_cap <- 0.04
+breaks <- seq(0, scale_cap, length.out = length(bw_palette) + 1)
+breaks[length(breaks)] <- Inf # Ensure values >= 0.05 are capped
+
+# Create the heatmap with specified color breaks
+comm_bin <- pheatmap(
+  comm_scores_log,
+  cluster_rows = FALSE,
+  cluster_cols = cluster,
+  labels_row = NULL,
+  labels_col = NULL,
+  color = bw_palette,
+  breaks = breaks
+)
+
+# Optionally customize the legend text using grid functions
+grid.text("samples", x = unit(0.5, "npc"), y = unit(-0.03, "npc"), gp = gpar(fontsize = 12))
+grid.text("communities", x = unit(-0.03, "npc"), y = unit(0.5, "npc"), rot = 90, gp = gpar(fontsize = 12))
+
+# Hack to modify legend (if more customization is needed manually)
+# (comm_bin$gtable would be the object containing legend, manipulate if needed)
+
+```
+
 ```{r pca_comm_scores}
 # load scores
 comm_scores <- fread("ELAND/results/pt_out_comm.csv")
