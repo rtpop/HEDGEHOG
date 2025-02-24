@@ -81,7 +81,7 @@ def create_resolution_graph(minres=0.001, maxres=10, density=0.1, neighbors=10, 
 
 
 
-def run_alg(condor_object, resolution):
+def run_alg(condor_object, resolution, comm_mult):
     """
     Executes the community detection algorithm on the provided condor_object using a specified resolution. 
     It initializes communities and calculates membership matrices for target and regulator members.
@@ -89,17 +89,22 @@ def run_alg(condor_object, resolution):
     Parameters:
     - condor_object: An object containing the data and methods required for community detection.
     - resolution (float): The resolution parameter that influences community structure detection.
+    - comm_mult (float): A multiplier for the maximum number of communities considered by condor.
 
     Returns:
     - T (scipy.sparse.csr_matrix): A sparse matrix indicating membership of target nodes in detected communities.
     - R (scipy.sparse.csr_matrix): A sparse matrix indicating membership of regulator nodes in detected communities.
     """
 
+    # this is basically copied from the condor brim function, but with the dynamic com_mult parameter
+    # without being able to tune this, the combinatorics due to overlapping communities cause issues
+    max_com = int(len(condor_object.tar_memb["community"].unique()) * comm_mult)
+
     # Initialize the community detection process for the specified resolution
     condor_object.initial_community(resolution=resolution)
 
     # Apply the BRIM algorithm on the condor_object for the specified resolution
-    condor_object.brim(resolution=resolution)
+    condor_object.brim(resolution=resolution, c = max_com)
 
     # Extract unique community identifiers for target and regulator members and sort them
     clT = sorted(condor_object.tar_memb["community"].unique())
@@ -117,10 +122,7 @@ def run_alg(condor_object, resolution):
     # Return the sparse matrices for target and regulator communities
     return T, R
 
-
-
-
-def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, processes=10):
+def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, processes=10, comm_mult):
     """
     Executes the community detection and similarity graph construction process for a network defined in the given CSV file.
     
@@ -131,6 +133,7 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
     - resolution_graphR (networkx.Graph): The graph to store resolution-based information for regulator communities.
     - all_resolutions (list of float): A list of resolution values to be used in community detection.
     - processes (int): The number of parallel processes to use for running the algorithm (default is 10).
+    - comm_mult (float): A multiplier for the maximum number of communities considered by condor.
     
     Returns:
     - cluT (ClusterGraph): A graph representing clusters based on target communities.
@@ -184,7 +187,7 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
     cluR.graph['num_leaves'] = len(rg)
 
     # Prepare arguments for parallel processing with the community detection algorithm
-    _arg_tuples = [(condor_object, res) for res in all_resolutions]
+    _arg_tuples = [(condor_object, res, comm_mult) for res in all_resolutions]
 
     # Use multiprocessing to execute the run_alg function in parallel
     with mp.Pool(processes=processes) as pool:
@@ -216,9 +219,9 @@ def weave_and_out(T, R, gn, rg, oR, oT, A):
     
     Parameters:
     - T (list of tuples): List of tuples representing the target community structure, 
-                          where each tuple contains the cluster representation and its length.
+                        where each tuple contains the cluster representation and its length.
     - R (list of tuples): List of tuples representing the regulator community structure, 
-                          where each tuple contains the cluster representation and its length.
+                        where each tuple contains the cluster representation and its length.
     - gn (dict): A dictionary mapping node identifiers to target node properties.
     - rg (dict): A dictionary mapping node identifiers to regulator node properties.
     - oR (str): Output file name suffix for regulator clusters.
@@ -270,11 +273,11 @@ def weave_and_out(T, R, gn, rg, oR, oT, A):
 
         # Write co-clustering results for regulator clusters to fileR
         fileR.writelines(["Cluster" + str(k) + "-" + str(i) + "\t" + "Cluster" + str(k) + "-" + str(ccR[i]) + "\t" + str(k) + "\n" 
-                          for i in range(0, len(ccR))])
+                        for i in range(0, len(ccR))])
 
         # Write co-clustering results for target clusters to fileT
         fileT.writelines(["Cluster" + str(k) + "-" + str(i) + "\t" + "Cluster" + str(k) + "-" + str(ccT[i]) + "\t" + str(k) + "\n" 
-                          for i in range(0, len(ccT))])
+                        for i in range(0, len(ccT))])
 
     # Close the output files after writing all data
     fileR.close()
@@ -352,7 +355,7 @@ def co_cluster_k(wv1, wv2, k, matrix):
 
     Returns:
     - Tuple[List[int], List[int]]: Two lists indicating the indices of the most similar clusters in
-      `wv1` and `wv2` for the specified level `k`. Returns (0, 0) if either cluster list is empty.
+    `wv1` and `wv2` for the specified level `k`. Returns (0, 0) if either cluster list is empty.
     """
 
     # Retrieve community assignments for clusters at level k from both Weaver objects
@@ -390,6 +393,7 @@ def bihidef(
     jaccard=0.75,
     minres=0.001,
     maxres=10,
+    comm_mult = 1.2,
     density=0.1,
     processes=10,
     neighbors=10,
@@ -417,6 +421,10 @@ def bihidef(
     maxres : float, optional
         The maximum resolution value, allowing for the detection of many smaller communities. Default is 10.
 
+    comm_mult: float, optional
+        A multiplier for the maximum number of communities considered by condor. This number will be multiplied by the number of target nodes (genes)
+        in the network. Default is 1.2.
+    
     density : float, optional
         The density threshold to determine if two resolutions are considered proximal. Default is 0.1.
 
@@ -459,7 +467,8 @@ def bihidef(
         resolution_graph=resolution_graph,
         resolution_graphR=resolution_graphR,
         all_resolutions=all_resolutions,
-        processes=processes
+        processes=processes,
+        comm_mult = comm_mult
     )
     
     # Run the persistence of community across resolution step.
