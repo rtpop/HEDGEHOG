@@ -25,4 +25,4 @@ def process_edge_list(input_file, output_file, sep = ' '):
     df = df.drop(columns=[2])
     
     # Write the modified DataFrame to a new file with tab separation
-    df.to_csv(output_file, sep='\t', index=False, header=False)
+    df.to_csv(output_file, sep=sep, index=False, header=False)
