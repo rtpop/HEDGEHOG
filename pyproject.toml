@@ -24,7 +24,6 @@ classifiers = [
 
 dependencies = [
     "hidef",
-    "multiprocessing",
     "networkx",
     "netZooPy",
     "numpy",
