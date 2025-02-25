@@ -23,7 +23,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "copy",
     "hidef",
     "multiprocessing",
     "networkx",
