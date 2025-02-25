@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 packages = ["eland", "bihidef"]
 
 [project]
-name = "netzoopy-eland"
+name = "eland"
 version = "0.1.0"
 authors = [
     {name = "Romana Pop", email = "romanatp@uio.no"},
