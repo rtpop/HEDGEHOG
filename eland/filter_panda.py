@@ -78,7 +78,7 @@ def convert_sparse_matrix_to_edgelist(selected_edges, node_list):
     edges_df = pd.DataFrame(edges_list, columns=['source', 'target', 'weight'])
     return edges_df
 
-def filter_panda(prior_file, panda_file, delimiter='\t'):
+def filter_panda(prior_file, panda_file, output_file, delimiter='\t'):
     """
     Filters the PANDA network by processing prior and PANDA networks, finding their intersection,
     filtering the edges, and converting the filtered adjacency matrix to an edgelist DataFrame.
@@ -86,6 +86,7 @@ def filter_panda(prior_file, panda_file, delimiter='\t'):
     Parameters:
     prior_file (str): Path to the prior network edge list file.
     panda_file (str): Path to the PANDA network edge list file.
+    output_file (str): (Optional) Path to the output file for the filtered edgelist. If not provided, the DataFrame is returned.
     delimiter (str): Delimiter used in the edge list files.
     
     Returns:
@@ -95,4 +96,7 @@ def filter_panda(prior_file, panda_file, delimiter='\t'):
     adjacency_matrix, node_list = intersect_networks(prior, panda)
     filtered_edges = filter_edges_by_max_values(adjacency_matrix)
     edges_df = convert_sparse_matrix_to_edgelist(filtered_edges, node_list)
-    return edges_df
+    if output_file:
+        edges_df.to_csv(output_file, sep=delimiter, index=False)
+    else:
+        return edges_df
