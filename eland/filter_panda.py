@@ -99,6 +99,6 @@ def filter_panda(prior_file, panda_file, output_file = None, delimiter='\t'):
     
     # save file
     if output_file is not None:
-        edges_df.to_csv(output_file, sep=delimiter, index=False)
+        edges_df.to_csv(output_file, sep=delimiter, index=False, header=False)
     else:
         return edges_df
