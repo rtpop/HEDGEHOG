@@ -122,7 +122,7 @@ def run_alg(condor_object, resolution, comm_mult):
     # Return the sparse matrices for target and regulator communities
     return T, R
 
-def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, processes=10, comm_mult):
+def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, comm_mult, processes=10):
     """
     Executes the community detection and similarity graph construction process for a network defined in the given CSV file.
     
