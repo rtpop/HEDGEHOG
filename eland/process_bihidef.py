@@ -1,12 +1,14 @@
+import pandas as pd
+
 def gmt_from_bihidef(df, output_file):
     """
     Create a GMT file from a Pandas DataFrame.
 
     Parameters:
     - df: DataFrame where:
-           - The first column (index 0) is the gene set name.
-           - The second column (index 1) is the size.
-           - The third column (index 2) is a list or string of gene identifiers.
+        - The first column (index 0) is the gene set name.
+        - The second column (index 1) is the size.
+        - The third column (index 2) is a list or string of gene identifiers.
     - output_file: File path to save the GMT file.
     """
     with open(output_file, 'w') as file:
@@ -26,3 +28,30 @@ def gmt_from_bihidef(df, output_file):
             gene_set_description = str(row[1]) + " genes"
             line_content = [gene_set_name, gene_set_description] + genes
             file.write("\t".join(line_content) + '\n')
+            
+def select_communities(filename, min_genes, max_genes):
+    """
+    Select communities with a number of genes within the specified range.
+
+    Parameters:
+    - filename: Path to a BIHIDEF .nodes file.
+    - min_genes: Minimum number of genes in the community.
+    - max_genes: Maximum number of genes in the community.
+
+    Returns:
+    - DataFrame with the selected communities.
+    """
+    # Read the .nodes file into a DataFrame
+    communities = pd.read_csv(filename, sep=' ', header=None)
+    
+    # Assign column names to the DataFrame
+    communities.columns = ['Community', 'Size', 'Genes']
+    
+    # Split the 'Genes' column into a list of genes
+    communities['Genes'] = communities['Genes'].str.split(' ')
+    
+    # Filter communities based on the size constraints
+    selected_communities = communities[(communities['Size'] >= min_genes) & (communities['Size'] <= max_genes)]
+    
+    # Return the filtered DataFrame
+    return selected_communities
