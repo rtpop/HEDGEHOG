@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime
 
 def gmt_from_bihidef(df, output_file):
     """
@@ -56,6 +57,8 @@ def select_communities(filename, min_genes, max_genes, log_file=None):
     
     if log_file:
         with open(log_file, 'w') as log:
+            current_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            log.write(f"Time and date: {current_time}\n")
             log.write(f"Maximum number of genes per community: {max_genes}\n")
             log.write(f"Minimum number of genes per community: {min_genes}\n")
             log.write(f"Selected communities: {len(selected_communities)}\n")
