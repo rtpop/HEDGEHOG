@@ -1,5 +1,5 @@
 import pandas as pd
-import datetime
+from datetime import datetime
 
 def gmt_from_bihidef(df, output_file):
     """
