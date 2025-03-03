@@ -44,7 +44,10 @@ def select_communities(filename, min_genes, max_genes, log_file=None):
     - DataFrame with the selected communities.
     """
     # Read the .nodes file into a DataFrame
-    communities = pd.read_csv(filename, sep=' ', header=None)
+    communities = pd.read_csv(filename, sep='\t', header=None)
+    
+    # drop the last column (I don't know what it is) \o/
+    communities = communities.drop(columns=[3])
     
     # Assign column names to the DataFrame
     communities.columns = ['Community', 'Size', 'Genes']
