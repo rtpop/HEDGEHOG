@@ -3,6 +3,7 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 import scipy.sparse as sp
+import community as community_louvain
 
 def load_networks(prior_file, panda_file, delimiter='\t'):
     """
@@ -84,7 +85,7 @@ def convert_sparse_matrix_to_edgelist(selected_edges, node_list):
 
 def calculate_modularity(edge_list):
     """
-    Calculates the modularity of a network given its edge list.
+    Calculates the modularity of a network given its edge list using the Louvain method.
     
     Parameters:
     edge_list (pd.DataFrame): DataFrame representing the edgelist with columns 'source', 'target', and 'weight'.
@@ -92,9 +93,19 @@ def calculate_modularity(edge_list):
     Returns:
     float: The modularity of the network.
     """
-    G = nx.from_pandas_edgelist(edge_list, source=edge_list.columns[0], target=edge_list.columns[1])
-    communities = list(nx.algorithms.community.greedy_modularity_communities(G))
-    modularity_value = nx.algorithms.community.modularity(G, communities)
+    # Ensure the edge list has at least three columns for source, target, and weight
+    if edge_list.shape[1] < 3:
+        raise ValueError("Edge list must have at least three columns for source, target, and weight.")
+    
+    # Create a graph from the edge list using the first two columns for source and target
+    G = nx.from_pandas_edgelist(edge_list, source=edge_list.columns[0], target=edge_list.columns[1], edge_attr=edge_list.columns[2])
+    
+    # Detect communities using the Louvain method
+    partition = community_louvain.best_partition(G)
+    
+    # Calculate the modularity of the network
+    modularity_value = community_louvain.modularity(partition, G)
+    
     return modularity_value
 
 def generate_random_network(G):
