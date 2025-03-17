@@ -92,7 +92,7 @@ def calculate_modularity(edge_list):
     Returns:
     float: The modularity of the network.
     """
-    G = nx.from_pandas_edgelist(edge_list, source='source', target='target')
+    G = nx.from_pandas_edgelist(edge_list, source=edge_list.columns[0], target=edge_list.columns[1])
     communities = list(nx.algorithms.community.greedy_modularity_communities(G))
     return nx.algorithms.community.modularity(G, communities)
 
