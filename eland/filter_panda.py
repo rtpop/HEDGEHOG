@@ -94,7 +94,8 @@ def calculate_modularity(edge_list):
     """
     G = nx.from_pandas_edgelist(edge_list, source=edge_list.columns[0], target=edge_list.columns[1])
     communities = list(nx.algorithms.community.greedy_modularity_communities(G))
-    return nx.algorithms.community.modularity(G, communities)
+    modularity_value = nx.algorithms.community.modularity(G, communities)
+    return modularity_value
 
 def generate_random_network(G):
     """
