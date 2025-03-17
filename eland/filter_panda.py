@@ -3,7 +3,7 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 import scipy.sparse as sp
-import community as community_louvain
+from community import community_louvain
 
 def load_networks(prior_file, panda_file, delimiter='\t'):
     """
