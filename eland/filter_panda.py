@@ -83,12 +83,13 @@ def convert_sparse_matrix_to_edgelist(selected_edges, node_list):
     edges_df = pd.DataFrame(edges_list, columns=['source', 'target', 'weight'])
     return edges_df
 
-def calculate_modularity(edge_list, resolution=5):
+def calculate_modularity(edge_list, resolution, comm_mult):
     """
     Calculates the modularity of a network given its edge list using condor
     Parameters:
     edge_list (pd.DataFrame): DataFrame representing the edgelist with columns 'source', 'target', and 'weight'.
     resolution (float): The resolution parameter for the modularity calculation.
+    comm_mult (float): The community multiplier parameter for the modularity calculation.
     Returns:
     float: The modularity of the network.
     """
@@ -98,8 +99,11 @@ def calculate_modularity(edge_list, resolution=5):
     # Detect communities
     cond.initial_community(resolution = resolution)
     
+    # max comm
+    max_com = int(len(cond.tar_memb["community"].unique()) * comm_mult)
+    
     # Calculate bipartite modularity using brim
-    cond.brim(resolution = resolution)
+    cond.brim(resolution = resolution, c = max_com)
     
     # get modularity value
     modularity_value = cond.modularity
