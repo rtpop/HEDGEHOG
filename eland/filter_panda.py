@@ -3,7 +3,7 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 import scipy.sparse as sp
-import communiy.community_louvain as community_louvain
+from netZooPy import condor
 
 def load_networks(prior_file, panda_file, delimiter='\t'):
     """
@@ -83,28 +83,26 @@ def convert_sparse_matrix_to_edgelist(selected_edges, node_list):
     edges_df = pd.DataFrame(edges_list, columns=['source', 'target', 'weight'])
     return edges_df
 
-def calculate_modularity(edge_list):
+def calculate_modularity(edge_list, resolution=5):
     """
-    Calculates the modularity of a network given its edge list using the Louvain method.
-    
+    Calculates the modularity of a network given its edge list using condor
     Parameters:
     edge_list (pd.DataFrame): DataFrame representing the edgelist with columns 'source', 'target', and 'weight'.
-    
+    resolution (float): The resolution parameter for the modularity calculation.
     Returns:
     float: The modularity of the network.
     """
-    # Ensure the edge list has at least three columns for source, target, and weight
-    if edge_list.shape[1] < 3:
-        raise ValueError("Edge list must have at least three columns for source, target, and weight.")
+    # create condor object
+    cond = condor.condor_object(dataframe = edge_list, silent = True)
     
-    # Create a graph from the edge list using the first two columns for source and target
-    G = nx.from_pandas_edgelist(edge_list, source=edge_list.columns[0], target=edge_list.columns[1], edge_attr=edge_list.columns[2])
+    # Detect communities
+    cond.initial_community(resolution = resolution)
     
-    # Detect communities using the Louvain method
-    partition = community_louvain.best_partition(G)
+    # Calculate bipartite modularity using brim
+    cond.brim(resolution = resolution)
     
-    # Calculate the modularity of the network
-    modularity_value = community_louvain.modularity(partition, G)
+    # get modularity value
+    modularity_value = cond.modularity
     
     return modularity_value
 
