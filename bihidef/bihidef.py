@@ -96,12 +96,14 @@ def run_alg(condor_object, resolution, comm_mult):
     - R (scipy.sparse.csr_matrix): A sparse matrix indicating membership of regulator nodes in detected communities.
     """
 
+    # Initialize the community detection process for the specified resolution
+    condor_object.initial_community(resolution=resolution)
+    
     # this is basically copied from the condor brim function, but with the dynamic com_mult parameter
     # without being able to tune this, the combinatorics due to overlapping communities cause issues
     max_com = int(len(condor_object.tar_memb["community"].unique()) * comm_mult)
-
-    # Initialize the community detection process for the specified resolution
-    condor_object.initial_community(resolution=resolution)
+    print("num of communities=", len(condor_object.tar_memb["community"].unique()))
+    print("max_com=", max_com)
 
     # Apply the BRIM algorithm on the condor_object for the specified resolution
     condor_object.brim(resolution=resolution, c = max_com)
@@ -126,7 +128,7 @@ def run_alg(condor_object, resolution, comm_mult):
     # Return the sparse matrices for target and regulator communities
     return T, R, Qscore
 
-def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, processes=10, comm_mult):
+def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, comm_mult, processes=10):
     """
     Executes the community detection and similarity graph construction process for a network defined in the given CSV file.
     
