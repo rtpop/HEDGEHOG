@@ -106,6 +106,10 @@ def run_alg(condor_object, resolution, comm_mult):
     # Apply the BRIM algorithm on the condor_object for the specified resolution
     condor_object.brim(resolution=resolution, c = max_com)
 
+    # calculate q scores
+    condor_object.qscores()
+    Qscore = condor_object.Qscore
+
     # Extract unique community identifiers for target and regulator members and sort them
     clT = sorted(condor_object.tar_memb["community"].unique())
     clR = sorted(condor_object.reg_memb["community"].unique())
@@ -120,7 +124,7 @@ def run_alg(condor_object, resolution, comm_mult):
     print("Resolution: " + str(resolution) + " NComs: " + str(len(condor_object.tar_memb["community"].unique())) + " Modularity: " + str(condor_object.modularity))
 
     # Return the sparse matrices for target and regulator communities
-    return T, R
+    return T, R, Qscore
 
 def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, processes=10, comm_mult):
     """
@@ -208,7 +212,7 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
         cluR.add_clusters(resolution_graphR, all_resolutions[i])
 
     # Return the cluster graphs and matrices for further analysis
-    return cluT, cluR, gn, rg, A, B
+    return cluT, cluR, gn, rg, A, B, Qscores
 
 
 
