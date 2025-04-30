@@ -110,7 +110,7 @@ def run_alg(condor_object, resolution, comm_mult):
 
     # calculate q scores
     condor_object.qscores(c = max_com, resolution=resolution)
-    Qscore = condor_object.Qscore
+    Qscore = condor_object.Qscores
 
     # Extract unique community identifiers for target and regulator members and sort them
     clT = sorted(condor_object.tar_memb["community"].unique())
@@ -126,7 +126,7 @@ def run_alg(condor_object, resolution, comm_mult):
     print("Resolution: " + str(resolution) + " NComs: " + str(len(condor_object.tar_memb["community"].unique())) + " Modularity: " + str(condor_object.modularity))
 
     # Return the sparse matrices for target and regulator communities
-    return T, R, Qscore
+    return T, R, Qscores
 
 def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, comm_mult, processes=10):
     """
