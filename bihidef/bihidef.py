@@ -210,6 +210,7 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
         nodename = '{:.4f}'.format(all_resolutions[i])
         resolution_graph.nodes[nodename]['matrix'] = results[i][0]
         resolution_graphR.nodes[nodename]['matrix'] = results[i][1]
+        Qscores = results[i][2]
         cluT.add_clusters(resolution_graph, all_resolutions[i])
         cluR.add_clusters(resolution_graphR, all_resolutions[i])
 
