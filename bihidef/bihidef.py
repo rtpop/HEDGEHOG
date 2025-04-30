@@ -110,7 +110,7 @@ def run_alg(condor_object, resolution, comm_mult):
 
     # calculate q scores
     condor_object.qscores(c = max_com, resolution=resolution)
-    Qscore = condor_object.Qscores
+    Qscores = condor_object.Qscores
 
     # Extract unique community identifiers for target and regulator members and sort them
     clT = sorted(condor_object.tar_memb["community"].unique())
