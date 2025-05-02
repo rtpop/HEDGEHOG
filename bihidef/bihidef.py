@@ -205,18 +205,30 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
     # Include the initial matrices for the first resolution in results
     results = [[sp.sparse.coo_matrix(T).tocsr(), sp.sparse.coo_matrix(R).tocsr()]] + results
 
+    # Initialize a list to store qscore dictionaries
+    qscores_tar = []
+    qscores_res = []
+
     # Update the resolution graphs with matrices and add clusters for each resolution
     for i in range(len(all_resolutions)):
         nodename = '{:.4f}'.format(all_resolutions[i])
         resolution_graph.nodes[nodename]['matrix'] = results[i][0]
         resolution_graphR.nodes[nodename]['matrix'] = results[i][1]
-        Qscores = results[i][2]
+        qscore_tar = results[i][2][0]
+        qscore_res = results[i][2][1]
+        qscore_tar["resolution"] = all_resolutions[i]
+        qscore_res["resolution"] = all_resolutions[i]
         cluT.add_clusters(resolution_graph, all_resolutions[i])
         cluR.add_clusters(resolution_graphR, all_resolutions[i])
 
-    # Return the cluster graphs and matrices for further analysis
-    return cluT, cluR, gn, rg, A, B, Qscores
+        qscores_tar.append(qscore_tar)
+        qscores_res.append(qscore_res)
 
+        qscore_res.to_csv("qscore_reg.csv", index=False)
+        qscore_tar.to_csv("qscore_tar.csv", index=False)
+
+    # Return the cluster graphs and matrices for further analysis
+    return cluT, cluR, gn, rg, A, B
 
 
 def weave_and_out(T, R, gn, rg, oR, oT, A):
