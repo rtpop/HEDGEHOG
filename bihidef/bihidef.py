@@ -214,8 +214,8 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
         nodename = '{:.4f}'.format(all_resolutions[i])
         resolution_graph.nodes[nodename]['matrix'] = results[i][0]
         resolution_graphR.nodes[nodename]['matrix'] = results[i][1]
-        qscore_tar = results[i][2][0]
-        qscore_res = results[i][2][1]
+        qscore_tar = results[i][2]["tar_qscores"]
+        qscore_res = results[i][2]["reg_qscores"]
         qscore_tar["resolution"] = all_resolutions[i]
         qscore_res["resolution"] = all_resolutions[i]
         cluT.add_clusters(resolution_graph, all_resolutions[i])
