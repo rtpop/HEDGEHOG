@@ -210,22 +210,20 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
     qscores_res = []
 
     # Update the resolution graphs with matrices and add clusters for each resolution
-    for i in range(len(all_resolutions)):
-        nodename = '{:.4f}'.format(all_resolutions[i])
+    for i, resolution in enumerate(all_resolutions):
+        nodename = '{:.4f}'.format(resolution)
         resolution_graph.nodes[nodename]['matrix'] = results[i][0]
         resolution_graphR.nodes[nodename]['matrix'] = results[i][1]
-        if i == 0:
-            continue
-        else:  
+        cluT.add_clusters(resolution_graph, resolution)
+        cluR.add_clusters(resolution_graphR, resolution)
+        
+        if i > 0:
             qscore_tar = results[i][2]["tar_qscores"]
             qscore_res = results[i][2]["reg_qscores"]
-            qscore_tar["resolution"] = all_resolutions[i]
-            qscore_res["resolution"] = all_resolutions[i]
+            qscore_tar["resolution"] = resolution
+            qscore_res["resolution"] = resolution
             qscores_tar.append(qscore_tar)
             qscores_res.append(qscore_res)
-
-        cluT.add_clusters(resolution_graph, all_resolutions[i])
-        cluR.add_clusters(resolution_graphR, all_resolutions[i])
 
         
     # remove reg_ and tar_ from the node names
