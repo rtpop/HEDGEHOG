@@ -33,7 +33,8 @@ def intersect_networks(prior, panda, prior_only=False):
     scipy.sparse.csr_matrix: The adjacency matrix of the intersected network.
     list: The list of nodes in the intersected network.
     """
-    common_edges = set(prior.edges()).intersection(panda.edges())
+    prior_edges = {edge for edge in prior.edges() if prior[edge[0]][edge[1]]['weight'] == 1}
+    common_edges = prior_edges.intersection(panda.edges())
     weighted_prior = nx.DiGraph()
     
     for u, v in common_edges:
