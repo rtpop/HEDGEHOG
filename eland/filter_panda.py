@@ -33,8 +33,11 @@ def intersect_networks(prior, panda, prior_only=False):
     scipy.sparse.csr_matrix: The adjacency matrix of the intersected network.
     list: The list of nodes in the intersected network.
     """
+    # Select prior edges
     prior_edges = {edge for edge in prior.edges() if prior[edge[0]][edge[1]]['weight'] == 1}
     common_edges = prior_edges.intersection(panda.edges())
+    
+    # Create weighted prior
     weighted_prior = nx.DiGraph()
     
     for u, v in common_edges:
@@ -44,6 +47,7 @@ def intersect_networks(prior, panda, prior_only=False):
     if prior_only:
         return weighted_prior
     else:
+        # return adjacency matrix for further filtering
         node_list = list(weighted_prior.nodes())
         adjacency_matrix = nx.adjacency_matrix(weighted_prior, nodelist=node_list)
         return adjacency_matrix, node_list
