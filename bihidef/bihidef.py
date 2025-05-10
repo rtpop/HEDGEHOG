@@ -106,11 +106,11 @@ def run_alg(condor_object, resolution, comm_mult):
     print("max_com=", max_com)
 
     # Apply the BRIM algorithm on the condor_object for the specified resolution
-    condor_object.brim(resolution=resolution, c = max_com)
+    #condor_object.brim(resolution=resolution, c = max_com)
 
     # calculate q scores
-    condor_object.qscores(c = max_com, resolution=resolution)
-    Qscores = condor_object.Qscores
+    #condor_object.qscores(c = max_com, resolution=resolution)
+    #Qscores = condor_object.Qscores
 
     # Extract unique community identifiers for target and regulator members and sort them
     clT = sorted(condor_object.tar_memb["community"].unique())
@@ -126,7 +126,7 @@ def run_alg(condor_object, resolution, comm_mult):
     print("Resolution: " + str(resolution) + " NComs: " + str(len(condor_object.tar_memb["community"].unique())) + " Modularity: " + str(condor_object.modularity))
 
     # Return the sparse matrices for target and regulator communities
-    return T, R, Qscores
+    return T, R
 
 def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, comm_mult, processes=10):
     """
@@ -217,20 +217,20 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
         cluT.add_clusters(resolution_graph, resolution)
         cluR.add_clusters(resolution_graphR, resolution)
         
-        if i > 0:
-            qscore_tar = results[i][2]["tar_qscores"]
-            qscore_res = results[i][2]["reg_qscores"]
-            qscore_tar["resolution"] = resolution
-            qscore_res["resolution"] = resolution
-            qscores_tar.append(qscore_tar)
-            qscores_res.append(qscore_res)
+    #     if i > 0:
+    #         qscore_tar = results[i][2]["tar_qscores"]
+    #         qscore_res = results[i][2]["reg_qscores"]
+    #         qscore_tar["resolution"] = resolution
+    #         qscore_res["resolution"] = resolution
+    #         qscores_tar.append(qscore_tar)
+    #         qscores_res.append(qscore_res)
 
         
-    # remove reg_ and tar_ from the node names
-    qscore_tar[0] = qscore_tar[0].str.replace("tar_", "")
-    qscore_res[0] = qscore_res[0].str.replace("reg_", "")
-    qscore_res.to_csv("qscore_reg.csv", index=False)
-    qscore_tar.to_csv("qscore_tar.csv", index=False)
+    # # remove reg_ and tar_ from the node names
+    # qscore_tar[0] = qscore_tar[0].str.replace("tar_", "")
+    # qscore_res[0] = qscore_res[0].str.replace("reg_", "")
+    # qscore_res.to_csv("qscore_reg.csv", index=False)
+    # qscore_tar.to_csv("qscore_tar.csv", index=False)
 
     # Return the cluster graphs and matrices for further analysis
     return cluT, cluR, gn, rg, A, B
