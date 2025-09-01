@@ -22,7 +22,9 @@ This tool comprises two modules. The main community detection algorithm is imple
 ```math
 S_{ij} = \sum_{u \in C^{(1)}_i} \sum_{v \in C^{(2)}_j} \mathrm{A}_{u,v}
 ```
-<p>$C^{(1)}_{i}$ is the set of nodes in cluster $i$ of partition 1, $C^{(2)}_{j}$ is the set of nodes in cluster $j$ of partition 2, and $A_{u,v}$ is the entry in the adjacency matrix corresponding to the edge (or its weight) between nodes $u$ and $v$.</p>
+<p>$C^{(1)}_{i}$ is the set of nodes in cluster $i$ of partition 1, $C^{(2)}_{j}$ is the set of nodes in cluster $j$ of partition 2, and $A_{u,v}$ is the entry in the adjacency matrix corresponding to the edge (or its weight) between nodes $u$ and $v$.
+
+Due to the nature of bi-partite communities, the co-clustering relationship is not necessarily reciprocal. Meaning that given community $i$ in partition 1 and community $j$ in partition 2, $S_{ij}$ is not necessarily the same as $S_{ji}$. Thus, the co-clustering relationship is calculated for each partition.</p>
 
 The ``hedgehog`` module filters and formates PANDA gene regulatory networks so they are suitable for use with BiHiDef. Furhermore, it also formats and outputs the results of BiHiDef as a ``gmt`` file which can be used as "regulatory pathways" for Gene Set Enrichment Analysis or other downstream applications. 
 
@@ -30,9 +32,10 @@ The ``hedgehog`` module filters and formates PANDA gene regulatory networks so t
 
 BihiDef can be run on any bi-partite network and takes as input a comma separated edge list. However, highly dense networks are unlikely to yield any workable communities and should be filtered prior to applying BiHidef. BiHiDef will output several files:
 
-``reg.nodes``: communities on the "regulator" partition. This refers to the first partition.
-``tar.nodes``: communities on the "target" partition. This refers to the second partition.
-
+* ``pvr.nodes``: communities on the "regulator" partition. This refers to the first partition.
+* ``pvg.nodes``: communities on the "target" partition. This refers to the second partition.
+* ``pvr.edges`` & ``pvg.edges``: the hierarchical community structure for the two partitions.
+* ``cocluster_pvr_Reg.txt`` & ``cocluster_pvg_Tar.txt``: co-clustering relationships for the two nodesets.
 
 ### BiHiDef only
 
