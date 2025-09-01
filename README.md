@@ -19,5 +19,5 @@ pip .
 ## Method description
 
 ## References
-1. Glass K, Huttenhower C, Quackenbush J, Yuan GC. Passing messages between biological networks to refine predicted interactions. PLoS One. 2013 May 31;8(5):e64832. doi: 10.1371/journal.pone.0064832. PMID: 23741402; PMCID: PMC3669401.
+1. Glass, K., Huttenhower, C., Quackenbush, J., & Yuan, G. C. (2013). Passing messages between biological networks to refine predicted interactions. PloS one, 8(5), e64832. https://doi.org/10.1371/journal.pone.0064832
 2. Zheng, F., Zhang, S., Churas, C. et al. HiDeF: identifying persistent structures in multiscale ‘omics data. Genome Biol 22, 21 (2021). https://doi.org/10.1186/s13059-020-02228-4
