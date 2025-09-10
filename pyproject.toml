@@ -3,10 +3,10 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["eland", "bihidef"]
+packages = ["hedgehog", "bihidef"]
 
 [project]
-name = "eland"
+name = "hedgehog"
 version = "0.1.0"
 authors = [
     {name = "Romana Pop", email = "romanatp@uio.no"},
