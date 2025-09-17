@@ -3,7 +3,7 @@
 ## Introduction
 Community detection in large scale biological networks, such as gene regulatory networks (GRNs) is challenging.
 
-Here we present HEDGEHOG, a tool for community detection in genome wide [PANDA](https://netzoo.github.io/zooanimals/panda/panda/)<sup>1</sup> networks. HEDGEHOG contains two modules: ``bihidef``, an adaptation of [HiDef](https://github.com/fanzheng10/HiDeF)<sup>2</sup> for bi-partite networks, and ``hedgehog`` which provides preocessing and filtering of PANDA GRNs for community detection with BiHidef and processing of BiHidef outputs into "regulatory pathways". 
+Here we present HEDGEHOG (Hierarchical Exploration of Detected Gene Hubs in Overlapping Groups), a tool for community detection in genome wide [PANDA](https://netzoo.github.io/zooanimals/panda/panda/)<sup>1</sup> networks. HEDGEHOG contains two modules: ``bihidef``, an adaptation of [HiDef](https://github.com/fanzheng10/HiDeF)<sup>2</sup> for bi-partite networks, and ``hedgehog`` which provides preocessing and filtering of PANDA GRNs for community detection with BiHidef and processing of BiHidef outputs into "regulatory pathways". 
 
 BiHiDef can be used for any bi-partite network as long as it is formatted as a comma separated edgelist, however HEDGEHOG provides filtering and network processing specific to PANDA networks.
 
