@@ -106,7 +106,7 @@ def run_alg(condor_object, resolution, comm_mult):
     print("max_com=", max_com)
 
     # Apply the BRIM algorithm on the condor_object for the specified resolution
-    #condor_object.brim(resolution=resolution, c = max_com)
+    condor_object.brim(resolution=resolution, c = max_com)
 
     # calculate q scores
     #condor_object.qscores(c = max_com, resolution=resolution)
