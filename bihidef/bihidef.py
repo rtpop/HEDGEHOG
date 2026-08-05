@@ -101,7 +101,11 @@ def run_alg(condor_object, resolution, comm_mult):
     
     # this is basically copied from the condor brim function, but with the dynamic com_mult parameter
     # without being able to tune this, the combinatorics due to overlapping communities cause issues
-    max_com = int(len(condor_object.tar_memb["community"].unique()) * comm_mult)
+    max_label_tar = int(condor_object.tar_memb["community"].max())
+    max_label_reg = int(condor_object.reg_memb["community"].max())
+    # ensure max_com is at least the max label and scaled by comm_mult
+    max_com = max(int(max_label_tar * comm_mult), int(max_label_reg * comm_mult), max_label_tar, max_label_reg)
+    
     print("num of communities=", len(condor_object.tar_memb["community"].unique()))
     print("max_com=", max_com)
 
