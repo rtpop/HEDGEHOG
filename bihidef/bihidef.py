@@ -1,11 +1,11 @@
 import numpy as np
 import networkx as nx
-from netZooPy import condor
 import pandas as pd
 import copy
 from scipy.sparse import *
 import scipy as sp
 import multiprocessing as mp
+import condor
 
 
 from hidef.hidef_finder import ClusterGraph,update_resolution_graph
