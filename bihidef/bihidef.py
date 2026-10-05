@@ -231,11 +231,17 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
             qscores_res.append(qscore_res)
 
         
-    # remove reg_ and tar_ from the node names
-    qscore_tar[0] = qscore_tar[0].str.replace("tar_", "")
-    qscore_res[0] = qscore_res[0].str.replace("reg_", "")
-    qscore_res.to_csv("qscore_reg.csv", index=False)
-    qscore_tar.to_csv("qscore_tar.csv", index=False)
+    # Export scores from every collected resolution, including undefined scores.
+    qscore_tar = pd.concat(qscores_tar, ignore_index=True) if qscores_tar else pd.DataFrame(
+        columns=["tar", "community", "qscore", "resolution"]
+    )
+    qscore_res = pd.concat(qscores_res, ignore_index=True) if qscores_res else pd.DataFrame(
+        columns=["reg", "community", "qscore", "resolution"]
+    )
+    qscore_tar["tar"] = qscore_tar["tar"].str.replace(r"^tar_", "", regex=True)
+    qscore_res["reg"] = qscore_res["reg"].str.replace(r"^reg_", "", regex=True)
+    qscore_res.to_csv("qscore_reg.csv", index=False, na_rep="NaN")
+    qscore_tar.to_csv("qscore_tar.csv", index=False, na_rep="NaN")
 
     # Return the cluster graphs and matrices for further analysis
     return cluT, cluR, gn, rg, A, B
