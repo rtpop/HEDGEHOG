@@ -104,7 +104,8 @@ def run_alg(condor_object, resolution, comm_mult):
     max_label_tar = int(condor_object.tar_memb["community"].max())
     max_label_reg = int(condor_object.reg_memb["community"].max())
     # ensure max_com is at least the max label and scaled by comm_mult
-    max_com = max(int(max_label_tar * comm_mult), int(max_label_reg * comm_mult), max_label_tar, max_label_reg)
+    required_columns = max(max_label_tar, max_label_reg) + 1
+    max_com = max(required_columns, int(required_columns * comm_mult))
     
     print("num of communities=", len(condor_object.tar_memb["community"].unique()))
     print("max_com=", max_com)
@@ -130,7 +131,7 @@ def run_alg(condor_object, resolution, comm_mult):
     print("Resolution: " + str(resolution) + " NComs: " + str(len(condor_object.tar_memb["community"].unique())) + " Modularity: " + str(condor_object.modularity))
 
     # Return the sparse matrices for target and regulator communities
-    return T, R
+    return T, R, Qscores
 
 def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions, comm_mult, processes=10):
     """
@@ -230,11 +231,17 @@ def run(filename, jaccard, resolution_graph, resolution_graphR, all_resolutions,
             qscores_res.append(qscore_res)
 
         
-    # remove reg_ and tar_ from the node names
-    qscore_tar[0] = qscore_tar[0].str.replace("tar_", "")
-    qscore_res[0] = qscore_res[0].str.replace("reg_", "")
-    qscore_res.to_csv("qscore_reg.csv", index=False)
-    qscore_tar.to_csv("qscore_tar.csv", index=False)
+    # Export scores from every collected resolution, including undefined scores.
+    qscore_tar = pd.concat(qscores_tar, ignore_index=True) if qscores_tar else pd.DataFrame(
+        columns=["tar", "community", "qscore", "resolution"]
+    )
+    qscore_res = pd.concat(qscores_res, ignore_index=True) if qscores_res else pd.DataFrame(
+        columns=["reg", "community", "qscore", "resolution"]
+    )
+    qscore_tar["tar"] = qscore_tar["tar"].str.replace(r"^tar_", "", regex=True)
+    qscore_res["reg"] = qscore_res["reg"].str.replace(r"^reg_", "", regex=True)
+    qscore_res.to_csv("qscore_reg.csv", index=False, na_rep="NaN")
+    qscore_tar.to_csv("qscore_tar.csv", index=False, na_rep="NaN")
 
     # Return the cluster graphs and matrices for further analysis
     return cluT, cluR, gn, rg, A, B
